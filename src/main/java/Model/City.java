@@ -19,7 +19,7 @@ public class City
     public Boolean isActualWeather()
     {
         Date currentDate = new Date();
-        long timeDifference = currentDate.toInstant().until(requestTime.toInstant(), ChronoUnit.MINUTES);
+        long timeDifference = requestTime.toInstant().until(currentDate.toInstant(), ChronoUnit.MINUTES);
 
         if (timeDifference > 10)
             return false;
