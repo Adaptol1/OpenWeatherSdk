@@ -3,12 +3,16 @@ package Service;
 import Controller.Controller;
 import Model.City;
 import com.google.gson.JsonObject;
-
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Service designed to start a separate thread that would
+ * check information about the stored weather in city list and
+ * updates it if information is deprecated
+ */
 public class PollingService extends Thread
 {
     private String key;

@@ -15,6 +15,10 @@ import Exception.OpenWeatherSdkConnectionServerException;
 import Exception.OpenWeatherSdkRequestsLimitException;
 import org.apache.http.util.EntityUtils;
 
+/**
+ * Class designed to send requests to OpenWeatherApi
+ * Json object with actual information about weather
+ */
 public class Controller
 {
     private String defaultUrl = "https://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s";
