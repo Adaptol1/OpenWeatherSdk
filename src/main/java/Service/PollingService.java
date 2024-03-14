@@ -3,6 +3,8 @@ package Service;
 import Controller.Controller;
 import Model.City;
 import com.google.gson.JsonObject;
+
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -45,7 +47,7 @@ public class PollingService extends Thread
                 TimeUnit.MINUTES.sleep(1);
             }
         }
-        catch (InterruptedException e)
+        catch (IOException | RuntimeException | InterruptedException e)
         {
             System.out.println(e.toString());
         }

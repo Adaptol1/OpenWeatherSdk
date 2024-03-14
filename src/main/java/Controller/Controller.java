@@ -19,61 +19,43 @@ public class Controller
 {
     private String defaultUrl = "https://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s";
 
-    public JsonObject requestWeather(String cityName, String apiKey)
+    public JsonObject requestWeather(String cityName, String apiKey) throws IOException, RuntimeException
     {
         JsonObject weather = null;
-        try {
-            String url = String.format(defaultUrl, URLEncoder.encode(cityName, "UTF-8"), apiKey);
-            Request request = Request.Get(url);
-            weather = processResponse(request);
-        }
-        catch(IOException e)
-        {
-            System.out.println(e.toString());
-        }
-        finally
-        {
-            return weather;
-        }
+        String url = String.format(defaultUrl, URLEncoder.encode(cityName, "UTF-8"), apiKey);
+        Request request = Request.Get(url);
+        weather = processResponse(request);
+        return weather;
     }
 
-    private JsonObject processResponse(Request request)
+    private JsonObject processResponse(Request request) throws IOException, RuntimeException
     {
         JsonObject weather = null;
-        try
-        {
-            HttpResponse response = request.execute().returnResponse();
-            int statusCode = response.getStatusLine().getStatusCode();
+        HttpResponse response = request.execute().returnResponse();
+        int statusCode = response.getStatusLine().getStatusCode();
 
-            if(statusCode == 200)
-            {
-                byte[] content = EntityUtils.toByteArray(response.getEntity());
-                weather = new Gson().fromJson(new String(content), JsonObject.class);
-                weather = editJson(weather);
-            }
-            else
-            {
-                switch(statusCode)
-                {
-                    case 404:
-                        throw new OpenWeatherSdkCityNotFoundException(statusCode, "City with this name was not found");
-                    case 401:
-                        throw new OpenWeatherSdkInvalidKeyException(statusCode, "Unauthorized: invalid api key");
-                    case 429:
-                        throw new OpenWeatherSdkRequestsLimitException(statusCode, "Limit of requests exceeded");
-                    default:
-                        throw new OpenWeatherSdkConnectionServerException("Server connection failed");
-                }
-            }
-        }
-        catch(IOException | RuntimeException e)
+        if(statusCode == 200)
         {
-            System.out.println(e.toString());
+            byte[] entityBytes = EntityUtils.toByteArray(response.getEntity());
+            weather = new Gson().fromJson(new String(entityBytes), JsonObject.class);
+            weather = editJson(weather);
         }
-        finally
+        else
         {
-            return weather;
+            switch(statusCode)
+            {
+                case 404:
+                    throw new OpenWeatherSdkCityNotFoundException(statusCode, "City with this name was not found");
+                case 401:
+                    throw new OpenWeatherSdkInvalidKeyException(statusCode, "Unauthorized: invalid api key");
+                case 429:
+                    throw new OpenWeatherSdkRequestsLimitException(statusCode, "Limit of requests exceeded");
+                default:
+                    throw new OpenWeatherSdkConnectionServerException("Server connection failed");
+            }
         }
+
+        return weather;
     }
 
     private JsonObject editJson(JsonObject json)

@@ -4,6 +4,7 @@ import Controller.Controller;
 import Model.City;
 import Service.PollingService;
 import com.google.gson.JsonObject;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import Exception.OpenWeatherSdkIllegalKeyException;
@@ -21,24 +22,16 @@ public class OpenWeatherClient
 
     private PollingService pollingService;
 
-    private static HashMap<String, OpenWeatherClient> sdkClientsPool = new HashMap<>();
+    public static HashMap<String, OpenWeatherClient> sdkClientsPool = new HashMap<>();
 
-    public static OpenWeatherClient newOpenWeatherClient (String key, Mode mode)
+    public static OpenWeatherClient newOpenWeatherClient (String key, Mode mode) throws InterruptedException, RuntimeException
     {
-        try
-        {
-            if (sdkClientsPool.containsKey(key))
-                throw new OpenWeatherSdkIllegalKeyException("This key is already used");
+        if (sdkClientsPool.containsKey(key))
+            throw new OpenWeatherSdkIllegalKeyException("This key is already used");
 
-            OpenWeatherClient openWeatherClient = new OpenWeatherClient(key, mode);
-            sdkClientsPool.put(key, openWeatherClient);
-            return openWeatherClient;
-        }
-        catch(RuntimeException e)
-        {
-            System.out.println(e.toString());
-            return null;
-        }
+        OpenWeatherClient openWeatherClient = new OpenWeatherClient(key, mode);
+        sdkClientsPool.put(key, openWeatherClient);
+        return openWeatherClient;
     }
 
     private OpenWeatherClient (String key, Mode mode)
@@ -64,41 +57,25 @@ public class OpenWeatherClient
             pollingService.interrupt();
     }
 
-    public void removeCity(int index)
+    public void removeCity(int index) throws IndexOutOfBoundsException
     {
-        try {
-            if(index < 0 | index > MAX_CITY_COUNT)
-                throw new IndexOutOfBoundsException("City index is out of bound");
+        if(index < 0 | index > MAX_CITY_COUNT)
+            throw new IndexOutOfBoundsException("City index is out of bound");
 
-            switch (config.getMode())
-            {
-                case ON_DEMAND:
-                    cities.remove(index);
-                case POLLING:
-                    cities = pollingService.getCities();
-                    cities.remove(index);
-            }
-        }
-        catch (IndexOutOfBoundsException e)
+        if(config.getMode() == Mode.POLLING)
         {
-            System.out.println(e.toString());
+            cities = pollingService.getCities();
+            cities.remove(index);
         }
 
-
+        cities.remove(index);
     }
 
-    public JsonObject getWeather (String cityName)
+    public JsonObject getWeather (String cityName) throws IOException, RuntimeException, InterruptedException
     {
-        try
-        {
+
         if (cities.size() >= MAX_CITY_COUNT)
             throw new OpenWeatherSdkCitiesLimitException("City limit exceeded");
-        }
-        catch (RuntimeException e)
-        {
-            System.out.println(e.toString());
-            return null;
-        }
 
         if(config.getMode() == Mode.ON_DEMAND)
             return getWeatherOnDemand(cityName);
@@ -106,7 +83,7 @@ public class OpenWeatherClient
         return getWeatherPolling(cityName);
     }
 
-    private JsonObject getWeatherOnDemand(String cityName)
+    private JsonObject getWeatherOnDemand(String cityName) throws IOException, RuntimeException
     {
         for(int i = 0; i < cities.size(); i++)
         {
@@ -129,7 +106,7 @@ public class OpenWeatherClient
         return weather;
     }
 
-    private JsonObject getWeatherPolling(String cityName)
+    private JsonObject getWeatherPolling(String cityName) throws IOException, RuntimeException
     {
         cities = pollingService.getCities();
 

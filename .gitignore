@@ -10,4 +10,4 @@
 OpenWeatherSdk.iml
 .gitattributes
 /target/
-/src/main/java/Main.java
+src/main/java/Main.java
